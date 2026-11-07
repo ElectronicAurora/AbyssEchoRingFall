@@ -78,6 +78,9 @@ canvas{display:block;width:100%;height:auto}
 .chip.w{border-color:rgba(255,202,58,.5);color:var(--amber)}
 .chip.eq{background:rgba(56,240,216,.14);border-color:var(--cyan);color:var(--cyan)}
 .chip.draft{border-style:dashed;opacity:.85}
+.chip.usable{transition:background .12s,border-color .12s,transform .12s}
+.chip.usable:hover{background:rgba(56,240,216,.18);border-color:rgba(56,240,216,.9);transform:translateY(-1px)}
+.chip.usable:active{transform:translateY(0) scale(.97)}
 .bag .none{font-size:10px;color:#5a678a}
 .sealrow,.strow,.smrow{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px;font-size:10px;color:var(--dim)}
 .sealrow .sc{
@@ -246,6 +249,21 @@ input[type=number],input[type=text]{
 .faq[open] summary{margin-bottom:5px}
 .faq p{margin:0;color:#8d9bbd;font-size:12px;line-height:1.85}
 .rules-fold{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:11.5px;color:#7c8aae}
+
+/* ---------- 怪物图鉴 ---------- */
+#monsterModal .sheet{width:min(760px,100%);max-height:85vh;display:flex;flex-direction:column}
+#monsterModal h2{margin-bottom:14px}
+#monsterBody{flex:1;overflow-y:auto;padding-right:8px;font-size:12.5px;color:#8d9bbd;line-height:1.95}
+.monster-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media (max-width:600px){.monster-grid{grid-template-columns:1fr}}
+.monster-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px}
+.monster-card .m-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px;font-weight:700;color:#c3d2f0}
+.monster-card .m-top img{width:24px;height:24px}
+.monster-card .m-stats{display:flex;flex-wrap:wrap;gap:10px;font-size:11.5px;color:#8494b8;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.monster-card .m-stats b{color:#ffca3a}
+.monster-card .m-desc{font-size:12px;line-height:1.7;color:#a7b6d6}
+.monster-card .m-desc b{color:var(--cyan)}
+.monster-card .m-desc .danger{color:#ff5a5a;font-weight:600}
 </style>
 </head>
 <body>
@@ -254,6 +272,7 @@ input[type=number],input[type=text]{
     <h1>深渊回响：末环</h1>
     <span class="badge">Abyss Echo: RingFall</span>
     <span class="badge" id="modeBadge">单人探险</span>
+    <span class="badge" id="monsterBtn" style="cursor:pointer;border-color:rgba(56,240,216,.4);color:var(--cyan)">📖 怪物图鉴</span>
     <span class="badge">1-4 人 · 地牢冒险</span>
     <div class="round">第 <b id="rRound">1</b> 层 · 剩余 <b id="rPlayers">0</b> 名冒险者</div>
   </header>
@@ -411,15 +430,35 @@ input[type=number],input[type=text]{
         <div class="rsec">遗器对 BOSS</div>
         <p>斩月【斩杀】对任何目标均可使用；忘川【均分】一视同仁。但任何导致血量降至当前阶段底线的伤害，都会触发【锁血】强制锁血并清空负面状态，需多次攻击才能彻底击杀 BOSS。<br>
            其余 3 件（沧溟 / 七弦 / 掷星）对 BOSS 表现不变。</p>
+        <div class="rsec">精英怪</div>
+        <p>每层保底 1 个精英房：第 1 层为兽人 / 渊火咒术师，第 2 层起三者混出。<br>
+           👹 <b>兽人</b>：【狂怒】半血清负面、DEF 归零、ATK 大幅提升；【碎裂重击】1.5 倍伤害并摧毁装备。<br>
+           🔮 <b>渊火咒术师</b>：射程 3。【咒火洗礼】对全场敌人各 4 点真实伤害并附加【蓝】；被贴脸会后跳 1 格；受击时 50% 概率【土移转生】瞬移（每回合限 1 次）。<br>
+           🩸 <b>噬盾吞噬者</b>：同房间时【噬盾】截走沧溟护盾的一半（自身护盾上限 20）；普攻命中会【重碾】目标全部【尘】层，转成等量真实伤害。</p>
+        <div class="rsec">首领召唤</div>
+        <p>首领每进入新阶段都会撕裂空间召唤精英（召唤物不掉刻印）：看守召 1 只咒术师；深渊领主召 1 只咒术师 / 1 只吞噬者；末环之影召 2 只吞噬者 / 2 只咒术师。无尽模式每 3 层额外多召 1 只。</p>
       </div>
       <div class="rpane" data-pane="faq">
         <details class="faq"><summary>为什么我走不了？</summary><p>检查是否：① 行动点用完了（每回合 2 点）；② 被戒律「禁止移动」；③ 中了【黄】（喝药水解）；④ 被 ⑨b 撕裂把 DEF 压到负数（等一回合 / 用【灰】解）。</p></details>
         <details class="faq"><summary>怎么换房？</summary><p>走到房间边缘的<b>门格</b>（绿色方框），再点「移动」，会出现「进入 XX 房」选项。</p></details>
         <details class="faq"><summary>能不能攻击隔壁房间的怪？</summary><p>不能。所有攻击必须同房间。</p></details>
+        <details class="faq"><summary>可以打队友吗？</summary><p>可以，攻击列表里队友会标注「（队友）」。这不算叛变——用来帮队友解掉【蓝】（下次受击前无法攻击）或【白】，但伤害是真的，请注意别打死人。</p></details>
         <details class="faq"><summary>宝物怎么拿？</summary><p>走到宝箱<b>相邻格</b>，点「开箱」。</p></details>
       </div>
     </div>
     <button class="big" id="rulesCloseBtn">关闭</button>
+  </div>
+</div>
+
+<!-- 怪物图鉴 -->
+<div class="modal hide" id="monsterModal">
+  <div class="sheet">
+    <div class="sub">Bestiary</div>
+    <h2>地牢怪物图鉴</h2>
+    <div id="monsterBody">
+      <!-- 数据由 JS 动态渲染 -->
+    </div>
+    <button class="big" id="monsterCloseBtn">关闭</button>
   </div>
 </div>
 
@@ -506,6 +545,8 @@ const MONSTERS = {
   wolf:   { name:'暗影狼',     icon:'🐺', hp:20, atk:5,  def:1, rng:1, actions:2, aim:'lowest',  tier:'normal', skill:'rend' },
   boss_2: { name:'深渊领主',   icon:'😈', hp:120,atk:10, def:5, rng:1, actions:2, aim:'nearest', tier:'boss',   skill:'curse' },
   boss_3: { name:'末环之影',   icon:'👾', hp:180,atk:12, def:6, rng:1, actions:3, aim:'nearest', tier:'boss',   skill:'blackhole', cd:3 },
+  warlock:  { name:'渊火咒术师', icon:'🔮', hp:22, atk:5, def:2, rng:3, actions:1, aim:'lowest',  tier:'elite', skill:'curse_fire', cd:2 },
+  devourer: { name:'噬盾吞噬者', icon:'🩸', hp:38, atk:6, def:5, rng:1, actions:1, aim:'nearest', tier:'elite', skill:'devour', cd:0 },
 };
 
 function doorTiles(room){
@@ -757,9 +798,11 @@ function generateDungeon(floor){
       }
     } else if (r.type === 'elite') {
       const count = 1 + Math.floor(diff.extraMobs / 2);
+      const eliteTypes = ['orc', 'warlock', 'devourer'];
       for(let i=0; i<count; i++){
         const pos = freeSpot(r);
-        r.monsters.push({ type: 'orc', pos });
+        const eType = floor === 1 ? (Math.random() < 0.5 ? 'orc' : 'warlock') : pick(eliteTypes);
+        r.monsters.push({ type: eType, pos });
       }
       r.chests.push({ x: 2, y: 2, opened:false, items:[] });
     } else if (r.type === 'treasure') {
@@ -881,7 +924,7 @@ function generateFloor1(){
 }
 
 let MONSTER_UID = 1;
-function spawnMonster(type, roomId, pos){
+function spawnMonster(type, roomId, pos, summonedByBoss){
   const T = MONSTERS[type];
   if (!T) return null;
   const diff = getDifficultyScale();
@@ -905,6 +948,7 @@ function spawnMonster(type, roomId, pos){
     skill: T.skill || null,
     skillCd: T.cd || 0,
     rageTriggered: false,
+    isSummonedByBoss: !!summonedByBoss,   // ★ 新增：BOSS 召唤标记
   };
   // ★ 无尽模式 BOSS 专属强化
   if (T.tier === 'boss' && G.dungeon && G.dungeon.floor > 3) {
@@ -1137,7 +1181,7 @@ function createPlayer(i, name, isAI, maxHp){
     lastPrecept: null,
     gold: 10,
     shopUsed: 0,
-    cangmingReady: true,
+    cangmingGetRound: 0,   // ★ 获得沧溟时的轮次（0 = 从未获得）；本轮的回合开始不触发
   };
 }
 function mkState(){
@@ -1324,7 +1368,7 @@ function itemUidOf(p, id){ const it = p.bag.find(x => x.id === id); return it ? 
 function addItem(p, id){
   const it = mkItem(id);
   p.bag.push(it);
-  if (id === 'yq_cangming') p.cangmingReady = false; // 获得沧溟时，本回合不触发
+  if (id === 'yq_cangming') p.cangmingGetRound = (G && G.round) || 1; // 记录获得轮次，本轮的回合开始不触发
   return it.uid;
 }
 function removeUid(p, uid){ const i = p.bag.findIndex(it => uidEq(it.uid, uid)); if (i >= 0) p.bag.splice(i,1); }
@@ -2013,13 +2057,36 @@ function onBossLock(t, floor){
     addLog('【战吼】' + t.name + ' 发出震耳欲聋的咆哮！', 'hl');
     allEnts().forEach(e => {
       if (!e.isMonster && e.alive) {
-        e.st.yellow = Math.max(e.st.yellow, 2); // 锁 2 回合移动
+        e.st.yellow = Math.max(e.st.yellow, 2);
       }
     });
-    // 召唤两只史莱姆
-    for (let i=0; i<2; i++){
-      const spot = nearestFreeTile({room: t.room, pos: t.pos});
-      spawnMonster('slime', t.room, spot);
+  }
+
+  // ★ 所有 BOSS 阶段锁血召唤精英
+  const dungeonFloor = G.dungeon.floor;
+  let summonCount = 0;
+  let summonType = 'warlock';
+
+  if (t.type === 'boss_1') {
+    if (t.phaseIndex === 1) summonCount = 1;
+  } else if (t.type === 'boss_2') {
+    if (t.phaseIndex === 1) { summonCount = 1; summonType = 'warlock'; }
+    if (t.phaseIndex === 2) { summonCount = 1; summonType = 'devourer'; }
+  } else if (t.type === 'boss_3') {
+    if (t.phaseIndex === 1) { summonCount = 2; summonType = 'devourer'; }
+    if (t.phaseIndex === 2) { summonCount = 2; summonType = 'warlock'; }
+  }
+
+  // 无尽模式加成：每 3 层多招 1 只
+  if (dungeonFloor > 3) {
+    summonCount += Math.floor((dungeonFloor - 1) / 3);
+  }
+
+  if (summonCount > 0) {
+    addLog('【深渊召唤】' + t.name + ' 撕裂了空间，召唤了 ' + summonCount + ' 只精英怪！', 'kill');
+    for (let i = 0; i < summonCount; i++) {
+      const spot = nearestFreeTile({ room: t.room, pos: t.pos });
+      spawnMonster(summonType, t.room, spot, true);
     }
   }
 }
@@ -2103,6 +2170,7 @@ function attackResolve(src, tgt, opt){
                 : (src.isSummon ? summonAtk(src) : getAtk(src, opt.weapon));
   const atk = baseAtk + dustAdd;
   const def = getDef(tgt);
+  const dustBeforeHit = (tgt.st && tgt.st.dust) || 0;   // ★ 重碾要用受击前的【尘】层数
   let dmg = opt.trueDmg ? atk : atk - def, crit = false, mult = 1;
   const s1 = (src.isMonster) ? 0 : (share ? sealCount(owner, '1') : 0);
   if (s1 > 0 && Math.random() < (s1 >= 2 ? 1 : 0.5)){
@@ -2124,6 +2192,22 @@ function attackResolve(src, tgt, opt){
   }
 
   const dealt = dealDamage(tgt, dmg, {srcEnt:src, trueDmg: !!opt.trueDmg});
+
+  // ★ 渊火咒术师受击闪避（土移转生，每回合最多一次）
+  if (tgt.type === 'warlock' && tgt.alive && !tgt.dodgedThisRound && entDist(src, tgt) > 0){
+    if (Math.random() < 0.5){
+      tgt.dodgedThisRound = true;
+      const spot = nearestFreeTile({ room: tgt.room, pos: tgt.pos });
+      tgt.pos = spot;
+      addLog('【土移转生】' + entLabel(tgt) + ' 化作黑雾，瞬移到了新的位置！', 'hl');
+    }
+  }
+
+  // ★ 噬盾吞噬者重碾（把受击前目标的【尘】层数碾成等量真实伤害）
+  if (src.type === 'devourer' && tgt.alive && dustBeforeHit > 0){
+    addLog('【重碾】' + entLabel(src) + ' 碾碎了 ' + entLabel(tgt) + ' 的 ' + dustBeforeHit + ' 层【尘】！', 'hl');
+    dealDamage(tgt, dustBeforeHit, {trueDmg: true, tag: '重碾'});
+  }
 
   // 深渊诅咒（BOSS 2）
   if (src.isMonster && src.skill === 'curse' && !opt.trueDmg) {
@@ -2237,7 +2321,7 @@ function killEnt(victim, killer, toVoid){
           addLog('【BOSS 掉落】' + k.name + ' 直接获得遗器【' + ITEMS[loot].icon + ' ' + ITEMS[loot].name + '】！', 'hl');
         }
       }
-    } else if (victim.tier === 'elite' && Math.random() < 0.3){
+    } else if (victim.tier === 'elite' && !victim.isSummonedByBoss && Math.random() < 0.3){
       const key = victim.room + ':' + victim.pos.x + ':' + victim.pos.y;
       G.drops[key] = G.drops[key] || [];
       G.drops[key].push(mkItem('seal'));
@@ -2471,13 +2555,13 @@ function startTurn(){
         render();
         if (p.isAI && typeof aiAct === 'function'){ later(() => { aiAct(p); }, 150); }
       };
-      if (hasCangming(p) && p.alive && roomHasEnemies()){
-        if (p.cangmingReady === false) {
-          p.cangmingReady = true; // 获得当回合跳过，下回合开始生效
-        } else {
-          cangmingPassive(p, afterCangming);
-          return;
-        }
+      // ★ 沧溟：记录获得轮次，只有「获得那一轮」的回合开始不触发，下一轮立刻生效
+      const cangmingJustGot = (p.cangmingGetRound > 0 && G.round <= p.cangmingGetRound);
+      if (cangmingJustGot) {
+        // 本轮的回合开始不触发（等同"获得当回合不生效"），无需其他动作
+      } else if (hasCangming(p) && p.alive && roomHasEnemies()){
+        cangmingPassive(p, afterCangming);
+        return;
       }
       afterCangming();
     });
@@ -2644,7 +2728,7 @@ function pickup(p){
   if (rest.length){
     for (const it of rest) {
       p.bag.push(it);
-      if (it.id === 'yq_cangming') p.cangmingReady = false; // ★ 修复拾取沧溟的触发问题
+      if (it.id === 'yq_cangming') p.cangmingGetRound = (G && G.round) || 1; // ★ 记录获得轮次（拾取）
     }
     addLog(p.name + ' 拾获：' + rest.map(it=>ITEMS[it.id].name).join('、'), 'hl');
   }
@@ -2696,6 +2780,14 @@ function moveLocked(e){
   if (e.st && e.st.yellow > 0) return true;
   return getDef(e) < 0;
 }
+/* 给「无法移动」一句人话原因 */
+function moveLockReason(e){
+  if (!e) return '当前状态';
+  if (hasBan(e, 'move')) return '戒律禁止移动';
+  if (e.st && e.st.yellow > 0) return '【黄】';
+  if (getDef(e) < 0) return '⑨b【撕裂】把 DEF 压到 ' + getDef(e);
+  return '当前状态';
+}
 
 function reachableTiles(p, maxSteps){
   const room = G.dungeon.rooms[p.room];
@@ -2723,8 +2815,7 @@ function actMove(p){
   if (!p || !p.alive) return;
   if (p.actions <= 0){ addLog('行动点已用完。'); render(); return; }
   if (moveLocked(p)){
-    const why = getDef(p) < 0 ? '⑨b【撕裂】把 DEF 压到 ' + getDef(p) : '戒律 /【黄】';
-    addLog(p.name + ' 无法移动（' + why + '）。'); render(); return;
+    addLog(p.name + ' 无法移动（' + moveLockReason(p) + '）。'); render(); return;
   }
   addLog('【操作提示】请直接在地图上点击发光的格子进行移动（最多 2 格）。', 'sys');
   // 给个视觉反馈，让玩家注意到高亮
@@ -2733,6 +2824,7 @@ function actMove(p){
 
 function moveToTile(p, tx, ty){
   if (!p || !p.alive || p.actions <= 0) return;
+  if (moveLocked(p)){ addLog(p.name + ' 当前无法移动（' + moveLockReason(p) + '）。', 'sys'); render(); return; }
   if (!canStep(p.room, tx, ty)){ addLog('那个位置走不过去。'); render(); return; }
   const fromX = p.pos.x, fromY = p.pos.y;
   p.pos = {x: tx, y: ty};
@@ -2747,6 +2839,7 @@ function moveToTile(p, tx, ty){
 
 function moveToRoom(p, dir){
   if (!p || !p.alive || p.actions <= 0) return;
+  if (moveLocked(p)){ addLog(p.name + ' 无法移动，无法换房（' + moveLockReason(p) + '）。', 'sys'); render(); return; }
   const room = G.dungeon.rooms[p.room];
   if (!room) return;
   const destId = room.exits[dir];
@@ -2809,6 +2902,14 @@ function inRange(p, uid, t, mode){
 }
 
 function actAttack(p){
+  if (p.st && p.st.blue){
+    addLog(p.name + ' 处于【蓝】的状态，无法攻击（需要受到一次攻击才能解除）。', 'sys');
+    render(); return;
+  }
+  if (hasBan(p, 'atk')){
+    addLog(p.name + ' 被戒律禁止攻击，无法出手。', 'sys');
+    render(); return;
+  }
   const ws = weaponsOf(p).filter(inst => !ITEMS[inst.id].noAtk);
   const choices = [{uid:null, label:'空手', sub:'ATK ' + getAtk(p,null) + ' · 射程 ' + rngTxt(getRng(p,null))}];
   ws.forEach(inst => {
@@ -2858,7 +2959,8 @@ function estHit(raw, t, src){
 function isCharged(p, uid){ return !!uid && p.charging === uid && !!itemOf(p, uid); }
 
 function actAttackTarget(p, w){
-  const enemies = foesOf(p).filter(t => t.room === p.room);
+  // 允许攻击同房间的任意存活实体（含队友，用于解蓝 / 解白等互动）
+  const enemies = allEnts().filter(t => t.alive && t !== p && t.room === p.room);
   const wid = itemIdOf(p, w);
   const charged = isCharged(p, w);
   if (charged){
@@ -2946,16 +3048,21 @@ function specialThrow(p, w){
 }
 
 function pickTarget(p, w, mode){
-  const enemies = foesOf(p).filter(t => t.room === p.room);
-  const inR = enemies.filter(t => inRange(p, w, t, mode));
+  // 队友也在列表中
+  const targets = allEnts().filter(t => t.alive && t !== p && t.room === p.room);
+  const inR = targets.filter(t => inRange(p, w, t, mode));
   if (!inR.length){ addLog('射程内没有目标。'); render(); return; }
   const label = isCharged(p, w) ? '释放蓄力一击，目标？' : '攻击谁？';
-  showChoice(label, inR.map(t => ({
-    label: entLabel(t),
-    sub: hpDisp(t) + '/' + t.maxHp + ' · DEF ' + getDef(t) + dustHint(t) +
-         ' · 预计伤害 ' + estHit(Math.max(0, getAtk(p,w) - getDef(t)), t, p),
-    run: () => launchAttack(p, w, t, mode)
-  })), () => render());
+  showChoice(label, inR.map(t => {
+    const isAlly = !isEnemyOf(p, t);
+    return {
+      label: entLabel(t) + (isAlly ? '（队友）' : ''),
+      sub: hpDisp(t) + '/' + t.maxHp + ' · DEF ' + getDef(t) + dustHint(t) +
+           (t.st.blue ? ' · <span style="color:#38f0d8">受击解除【蓝】</span>' : '') +
+           ' · 预计伤害 ' + estHit(Math.max(0, getAtk(p,w) - getDef(t)), t, p),
+      run: () => launchAttack(p, w, t, mode)
+    };
+  }), () => render());
 }
 
 function launchAttack(p, w, t, mode){
@@ -3511,6 +3618,12 @@ function cangmingPoints(p){
   const d = ITEMS.yq_cangming;
   return Math.max(0, p.baseAtk + (d.atk || 0) + (bonusOf(p, th.item.uid).atk || 0) + seal5Bonus(p));
 }
+/* 沧溟的“圆心”房间：手持时是持有者所在房间；已投出时是落点房间 */
+function cangmingRoom(p){
+  if (hasArtifact(p, 'yq_cangming')) return p.room;
+  const th = G.thrown.find(t => t.owner === p.i && t.item.id === 'yq_cangming');
+  return th ? th.room : p.room;
+}
 function cangmingRange(p){
   if (hasSeal(p, '6b')) return Infinity;
   const inst = p.bag.find(it => it.id === 'yq_cangming');
@@ -3519,11 +3632,16 @@ function cangmingRange(p){
     const th = G.thrown.find(t => t.owner === p.i && t.item.id === 'yq_cangming');
     if (th) uid = th.item.uid;
   }
-  return p.baseRng + (uid != null ? (bonusOf(p, uid).rng || 0) : 0);
+  return Math.max(1, p.baseRng) + (uid != null ? (bonusOf(p, uid).rng || 0) : 0);
 }
 function cangmingTargets(p){
-  const R = cangmingRange(p);
-  return pickable(allEnts(), e => e.alive && e.room === p.room && (R === Infinity || entDist(p, e) <= R));
+  const isl = cangmingRoom(p), R = cangmingRange(p);
+  // 沧溟已投到别的房间时，以落点为圆心算距离（否则 entDist 跨房间会返回 ∞）
+  const th = G.thrown.find(t => t.owner === p.i && t.item.id === 'yq_cangming');
+  const origin = (th && th.room === isl && !hasArtifact(p, 'yq_cangming'))
+    ? { room: isl, pos: th.pos }
+    : p;
+  return pickable(allEnts(), e => e.alive && e.room === isl && (R === Infinity || entDist(origin, e) <= R));
 }
 function cangmingAllocUI(p, pts, targets, alloc, title, onFinish, onCancel){
   const keyOf = t => t.isSummon ? 's' + t.sid : (t.isMonster ? 'm' + t.mid : 'p' + t.i);
@@ -3586,8 +3704,19 @@ function executeCangming(p, alloc, targets, endTurn){
       if (healCheckDeath(t, p)) return;
     }
     if (a.shield > 0){
-      t.shield = (t.shield || 0) + a.shield;
-      addLog(entLabel(t) + ' 获得 ' + a.shield + ' 点护盾。');
+      let actualShield = a.shield;
+      // ★ 噬盾吞噬者：同房间每只吃掉一半护盾量
+      const devourers = G.monsters.filter(x => x.alive && x.type === 'devourer' && x.room === t.room);
+      if (devourers.length > 0) {
+        const stolen = Math.floor(a.shield / 2);
+        actualShield -= stolen;
+        devourers.forEach(x => {
+          x.shield = Math.min(20, (x.shield || 0) + stolen);
+        });
+        addLog('【噬盾吞噬者】' + entLabel(devourers[0]) + ' 截胡了 ' + stolen + ' 点护盾！', 'hl');
+      }
+      t.shield = (t.shield || 0) + actualShield;
+      if (actualShield > 0) addLog(entLabel(t) + ' 获得 ' + actualShield + ' 点护盾（当前 ' + t.shield + '）。');
     }
     if (a.dmg > 0){
       const dealt = applySkillDamage(p, t, a.dmg, {trueDmg:true, ignoreShield:true, tag:'遗器·沧溟'});
@@ -5024,6 +5153,7 @@ function monsterStartTurn(m){
   m.movedThisTurn = false;
   if (m.skillCd > 0) m.skillCd--;
   m.actedBans = [];
+  m.dodgedThisRound = false;      // ★ 渊火咒术师·土移转生：每回合只触发一次
   hideChoice();
   render();
   if (!turnStartTick(m)){ // 回合开始结算可能被撕裂打死
@@ -5103,6 +5233,41 @@ function monsterAct(m){
 
   const dist = entDist(m, target);
   const rng = m.rng || 0;
+
+  // ★ 渊火咒术师 AI
+  if (m.type === 'warlock'){
+    // 技能：咒火洗礼
+    if (m.skillCd <= 0 && foes.length > 0){
+      m.skillCd = 2;
+      markActed(m, 'atk');
+      addLog('【咒火洗礼】' + entLabel(m) + ' 释放出幽蓝色的火焰！', 'hl');
+      foes.forEach(t => {
+        if (!t.alive) return;
+        dealDamage(t, 4, {trueDmg: true, tag: '咒火'});
+        if (t.alive){
+          t.st.blue = true;
+          addLog(entLabel(t) + ' 受到【蓝】：下次受击前无法攻击。', 'sys');
+        }
+      });
+      m.actions--;
+      if (G.phase !== 'play') return;
+      settleWin(); if (G.phase !== 'play') return;
+      later(() => monsterAct(m), 380); return;
+    }
+    // 行为：如果贴脸了，尝试后退 1 格
+    if (dist <= 1 && !moveLocked(m)){
+      const dx = Math.sign(m.pos.x - target.pos.x);
+      const dy = Math.sign(m.pos.y - target.pos.y);
+      const nx = m.pos.x + (dx || (Math.random() < 0.5 ? 1 : -1));
+      const ny = m.pos.y + (dy || (Math.random() < 0.5 ? 1 : -1));
+      if (canStep(m.room, nx, ny)) {
+        m.pos = { x: nx, y: ny };
+        m.actions--;
+        addLog(entLabel(m) + ' 向后闪避拉开距离。', 'sys');
+        later(() => monsterAct(m), 380); return;
+      }
+    }
+  }
 
   // 末环之影【深渊处决】（第 3 层起解锁）
   if (isHighFloor && m.skill === 'blackhole' && target.hp <= target.maxHp * 0.3 && !target.isMonster && !target.isSummon && dist <= rng) {
@@ -5395,7 +5560,15 @@ function render(){
             const en = (q.ench[g.uids[0]] || []).map(x => ' ·' + enchantName(x)).join('');
             const dup = (g.id === 'armor' && q.bag.filter(x=>x.id==='armor').length > 1) ? ' ·仅计1件' : '';
             const no = (g.n > 1 ? '×' + g.n : (canEnchant(g.id) ? ' #' + g.uids[0] : ''));
-            return '<span class="chip' + eq + dr + '" title="' + it.desc + '">' + it.icon + it.name + no + en + dup + '</span>';
+            const isW = (it.type === 'weapon') ? '1' : '0';
+            // 只有当前回合、且不是 AI 时，武器才可点击切换
+            const clickable = (isW === '1' && q === p && !q.isAI && G.phase === 'play'
+                               && !G.animating && q.alive && q.actions > 0);
+            return '<span class="chip' + eq + dr + (clickable ? ' usable' : '') +
+              '" data-uid="' + g.uids[0] + '" data-isw="' + isW + '"' +
+              (clickable ? ' style="cursor:pointer;border-color:rgba(56,240,216,.6)"' : '') +
+              ' title="' + it.desc + (clickable ? '（点击装备此武器）' : '') + '">' +
+              it.icon + it.name + no + en + dup + '</span>';
           }).join('');
         })()
       : '<span class="none">（空）</span>';
@@ -5434,6 +5607,24 @@ function render(){
       (sealListOf(q).length ? '<div class="sealrow">刻印 ' + sealListOf(q).map(n=>'<span class="sc">'+n+'</span>').join('') + '</div>' : '') +
       (stateText(q) ? '<div class="strow">状态 ' + stateText(q).split(' · ').map(n=>'<span class="st">'+n+'</span>').join('') + '</div>' : '') +
       (summonsOf(q).length ? '<div class="smrow">召唤 ' + summonsOf(q).map(s=>'<span class="sm">'+s.icon+s.name+' '+Math.max(0,s.hp)+'/'+s.maxHp+(isSpawning(s)?' ·现身':(s.resting?' ·休息':''))+'</span>').join('') + '</div>' : '');
+
+    // ★ 绑定武器装备切换事件（人类玩家在自己的回合才能点）
+    if (G.phase === 'play' && q === p && !q.isAI && !G.animating && q.alive){
+      d.querySelectorAll('.chip[data-isw="1"]').forEach(el => {
+        el.onclick = () => {
+          if (!G || G.phase !== 'play' || G.animating || choiceOpen()) return;
+          if (q.actions <= 0){ addLog('行动点已用完，无法切换武器。', 'sys'); return; }
+          const uid = parseInt(el.dataset.uid, 10);
+          if (!uid || q.weapon === uid) return;              // 已经装备了
+          if (q.charging) breakCharge(q, ' 切换了武器');      // 切换会打断蓄力
+          q.weapon = uid;
+          const w = itemDef(q, uid);
+          addLog(q.name + ' 将武器切换为：' + (w ? w.name : '空手'), 'sys');
+          render();                                          // 重新渲染刷新 UI
+        };
+      });
+    }
+
     pl.appendChild(d);
   });
 
@@ -5446,8 +5637,8 @@ function render(){
     if (human && p){
       if (a === 'move'    && moveLocked(p)) dis = true;
       if (a === 'box'     && hasBan(p,'box'))  dis = true;
-      if (a === 'give'    && (hasBan(p,'item') || !p.bag.length || !getAdjacentAllies(p).length)) dis = true;
-      if (a === 'drop'    && !p.bag.length && !Object.keys(p.seals).some(k => (p.seals[k] || 0) > 0)) dis = true;
+      if (a === 'give'    && (hasBan(p,'item') || !(p.bag||[]).length || !getAdjacentAllies(p).length)) dis = true;
+      if (a === 'drop'    && !(p.bag||[]).length && !Object.keys(p.seals||{}).some(k => (p.seals[k] || 0) > 0)) dis = true;
       if (a === 'atk'     && (hasBan(p,'atk') || p.st.blue)) dis = true;
       if (a === 'skill'   && (hasBan(p,'artskill') || !artifactsOf(p).length)) dis = true;
       if (a === 'item'    && hasBan(p,'item')) dis = true;
@@ -5491,6 +5682,16 @@ cv.addEventListener('click', e => {
   // 1. 点击了怪物 -> 攻击
   const ent = tileOccupant(p.room, tx, ty);
   if (ent && ent.isMonster){
+    if (p.st && p.st.blue){
+      addLog(p.name + ' 处于【蓝】的状态，无法攻击（需要受到一次攻击才能解除）。', 'sys');
+      render();
+      return;
+    }
+    if (hasBan(p, 'atk')){
+      addLog(p.name + ' 被戒律禁止攻击，无法出手。', 'sys');
+      render();
+      return;
+    }
     if (inRange(p, p.weapon, ent, 'normal')) {
       launchAttack(p, p.weapon, ent, 'normal');
     } else {
@@ -5628,6 +5829,11 @@ cv.addEventListener('click', e => {
 
   // 4. 普通格子移动
   if (tx === p.pos.x && ty === p.pos.y) return;
+  if (moveLocked(p)){
+    addLog(p.name + ' 当前无法移动（' + moveLockReason(p) + '）。', 'sys');
+    render();
+    return;
+  }
   const reachable = reachableTiles(p, 2);
   const target = reachable.find(r => r.x === tx && r.y === ty);
   if (target) {
@@ -5836,6 +6042,76 @@ $('rulesCloseBtn').onclick = closeRules;
 $('rulesModal').onclick = e => { if (e.target === $('rulesModal')) closeRules(); };
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('rulesModal').classList.contains('hide')) closeRules();
+});
+
+/* =========================================================
+   怪物图鉴
+   ========================================================= */
+const MONSTER_DATA = {
+  normal: [
+    { name:'史莱姆', icon:'🟢', hp:'10', atk:'2', def:'0', rng:'1', act:'1', desc:'<b>【胶质】</b>受到的普通攻击伤害 -1（最低为 1）。' },
+    { name:'哥布林弓手', icon:'🏹', hp:'8', atk:'3', def:'0', rng:'4', act:'1', desc:'<b>【穿透箭】</b>造成真实伤害。命中时附加【破魔】（清空目标所有【尘】）。' },
+    { name:'暗影狼', icon:'🐺', hp:'20', atk:'5', def:'1', rng:'1', act:'2', desc:'<b>【撕裂突袭】</b>若本回合移动过且命中，附加 1 层【撕裂】。' },
+  ],
+  elite: [
+    { name:'兽人', icon:'👹', hp:'28', atk:'6', def:'2', rng:'1', act:'2', desc:'<b>【狂怒】</b>半血时清空自身负面，DEF 降为 0，ATK 大幅提升。<br><b>【碎裂重击】</b>（第 3 层起）1.5 倍伤害，永久摧毁目标一件护甲或武器；目标空手时改为 10 点真实伤害。' },
+    { name:'渊火咒术师', icon:'🔮', hp:'22', atk:'5', def:'2', rng:'3', act:'1', desc:'<b>【咒火洗礼】</b>每 2 回合，对同房间所有玩家造成 4 点真实伤害并施加【蓝】。<br><b>【秽土转生】</b>受击时，50% 概率瞬移到同房间随机空格（每回合限 1 次）。' },
+    { name:'噬盾吞噬者', icon:'🩸', hp:'38', atk:'6', def:'5', rng:'1', act:'1', desc:'<b>【吞噬护盾】</b>同房间内玩家获得护盾时，截胡一半（自身最多 20 盾）。<br><b>【重碾】</b>攻击命中时，若目标有【尘】，直接清零并附加等量真实伤害。' },
+  ],
+  boss: [
+    { name:'地牢看守', icon:'👑', hp:'80', atk:'8', def:'3', rng:'1', act:'2', desc:'<b>【锁血】</b>2 段血（第 2 层起为 3 段）。锁血时清空负面，<span class="danger">免疫【黄】【蓝】【戒律】</span>。<br><b>【战吼】</b>进入 P2 时，全场玩家施加 2 回合【黄】，并召唤 1 只咒术师。' },
+    { name:'深渊领主', icon:'😈', hp:'120', atk:'10', def:'5', rng:'1', act:'2', desc:'<b>【锁血】</b>3 段血。锁血时清空负面，<span class="danger">免疫【黄】【蓝】【戒律】</span>。<br><b>【深渊诅咒】</b>所有攻击附带 1 层【撕裂】。<br><b>【召唤】</b>进入 P2 召唤 1 只咒术师，P3 召唤 1 只吞噬者。' },
+    { name:'末环之影', icon:'👾', hp:'180', atk:'12', def:'6', rng:'1', act:'3', desc:'<b>【锁血】</b>3 段血。锁血时清空负面，<span class="danger">免疫【黄】【蓝】【戒律】</span>。<br><b>【引力黑洞】</b>将所有玩家拉到身边并造成 5 点真实伤害。<br><b>【深渊处决】</b>对 HP ≤ 30% 的残血玩家直接斩杀。<br><b>【召唤】</b>P2 召唤 2 只吞噬者，P3 召唤 2 只咒术师。' },
+  ]
+};
+
+function renderMonsterModal(){
+  const body = $('monsterBody');
+  if (!body) return;
+
+  const renderSection = (title, list) => {
+    return `<div class="rsec" style="margin-top:16px;margin-bottom:10px;">${title}</div>
+      <div class="monster-grid">
+        ${list.map(m => `
+          <div class="monster-card">
+            <div class="m-top"><span style="font-size:20px">${m.icon}</span>${m.name}</div>
+            <div class="m-stats">
+              <span>HP <b>${m.hp}</b></span>
+              <span>ATK <b>${m.atk}</b></span>
+              <span>DEF <b>${m.def}</b></span>
+              <span>射程 <b>${m.rng}</b></span>
+              <span>行动 <b>${m.act}</b></span>
+            </div>
+            <div class="m-desc">${m.desc}</div>
+          </div>
+        `).join('')}
+      </div>`;
+  };
+
+  body.innerHTML =
+    renderSection('普通怪物', MONSTER_DATA.normal) +
+    renderSection('精英怪物', MONSTER_DATA.elite) +
+    renderSection('深渊首领', MONSTER_DATA.boss) +
+    `<div style="margin-top:20px;padding:12px;border-radius:8px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);font-size:12px;color:#c4b5fd;">
+      <b>【无尽模式强化】</b><br>
+      第 4 层起，首领获得【深渊·N阶】前缀（每 3 层升 1 阶）：HP +30%/阶、ATK +15%/阶；看守额外 +3 DEF/阶，领主射程 +1，末环之影黑洞冷却缩短。<br>
+      首领每次锁血都会召唤精英，第 4 层起每 3 层再多召 1 只，且召唤物不掉落刻印/遗器。
+    </div>`;
+  body.scrollTop = 0;
+}
+
+$('monsterBtn').onclick = () => {
+  renderMonsterModal();
+  $('monsterModal').classList.remove('hide');
+};
+$('monsterCloseBtn').onclick = () => {
+  $('monsterModal').classList.add('hide');
+};
+$('monsterModal').onclick = e => {
+  if (e.target === $('monsterModal')) $('monsterModal').classList.add('hide');
+};
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('monsterModal').classList.contains('hide')) $('monsterModal').classList.add('hide');
 });
 
 /* 强制结束 */
